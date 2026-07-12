@@ -426,8 +426,6 @@ elif menu == "📈 Visualisasi":
 
             ],
 
-            trendline="ols"
-
         )
 
         st.plotly_chart(
@@ -610,9 +608,7 @@ elif menu == "📉 Evaluasi":
 
         x="Aktual",
 
-        y="Prediksi",
-
-        trendline="ols"
+        y="Prediksi"
 
     )
 
