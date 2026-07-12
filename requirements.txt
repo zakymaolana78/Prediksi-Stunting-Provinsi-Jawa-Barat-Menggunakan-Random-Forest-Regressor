@@ -3,6 +3,5 @@ pandas
 numpy
 plotly
 matplotlib
-joblib
 scikit-learn==1.6.1
 statsmodels
