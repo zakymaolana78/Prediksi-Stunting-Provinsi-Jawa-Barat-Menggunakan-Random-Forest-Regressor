@@ -1,10 +1,11 @@
 import streamlit as st
 import pandas as pd
+import ast
 import numpy as np
-import joblib
 import plotly.express as px
 import plotly.graph_objects as go
 from pathlib import Path
+from sklearn.ensemble import RandomForestRegressor
 
 # ==========================================================
 # KONFIGURASI HALAMAN
@@ -78,12 +79,84 @@ def load_dataset():
 dataset, hasil, evaluasi, importance, best_parameter, cross_validation, tuning_result = load_dataset()
 
 # ==========================================================
-# LOAD MODEL
+# MEMBANGUN MODEL RANDOM FOREST
 # ==========================================================
 
-model = joblib.load(
-    BASE_DIR / "model_stunting_rf.joblib"
-)
+X = dataset[
+    [
+        "persentase_penduduk_miskin",
+        "garis_kemiskinan",
+        "persentase_sanitasi_layak",
+        "jumlah_tenaga_gizi"
+    ]
+]
+
+y = dataset["jumlah_balita_stunting"]
+
+# ==========================================================
+# MEMBACA BEST PARAMETER
+# ==========================================================
+
+params = {}
+
+for _, row in best_parameter.iterrows():
+
+    parameter = str(row["Parameter"]).strip()
+    nilai = row["Nilai"]
+
+    # Jika kosong
+    if pd.isna(nilai):
+        params[parameter] = None
+        continue
+
+    # Jika berupa string
+    if isinstance(nilai, str):
+
+        nilai = nilai.strip()
+
+        # None
+        if nilai.lower() == "none":
+            params[parameter] = None
+
+        # Boolean
+        elif nilai.lower() == "true":
+            params[parameter] = True
+
+        elif nilai.lower() == "false":
+            params[parameter] = False
+
+        # String khusus Random Forest
+        elif nilai.lower() in ["sqrt", "log2"]:
+            params[parameter] = nilai.lower()
+
+        # Angka / List / Tuple
+        else:
+
+            try:
+                params[parameter] = ast.literal_eval(nilai)
+
+            except Exception:
+                params[parameter] = nilai
+
+    else:
+
+        params[parameter] = nilai
+
+# ==========================================================
+# MEMASTIKAN RANDOM STATE
+# ==========================================================
+
+params["random_state"] = 42
+
+# ==========================================================
+# MEMBANGUN MODEL
+# ==========================================================
+
+model = RandomForestRegressor(**params)
+
+model.fit(X, y)
+
+
 
 # ==========================================================
 # SIDEBAR
